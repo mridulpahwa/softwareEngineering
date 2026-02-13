@@ -4,10 +4,12 @@ export async function initDB() {
     const db = await dbPromise;
 
     await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS cart (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL
+        bookname TEXT NOT NULL,
+        bookdetails TEXT NOT NULL,
+        price REAL NOT NULL,
+        userdetails TEXT NOT NULL
     );
     `);
 

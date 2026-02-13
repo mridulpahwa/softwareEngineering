@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = 5173;
 
 async function startServer() {
   await initDB();
@@ -18,22 +18,37 @@ async function startServer() {
     res.send("API is running");
   });
 
-  // INSERT user
-  app.post("/users", async (req, res) => {
-    const { name, email } = req.body;
+  // INSERT cart
+  app.post("/cart", async (req, res) => {
+    const { bookname, bookdetails, price, userdetails } = req.body;
 
     const result = await db.run(
-      "INSERT INTO users (name, email) VALUES (?, ?)",
-      [name, email]
+      "INSERT INTO cart (bookname, bookdetails, price, userdetails) VALUES (?, ?, ?, ?)",
+      [bookname, bookdetails, price, userdetails]
     );
 
     res.json({ id: result.lastID });
   });
 
-  // READ users
-  app.get("/users", async (req, res) => {
-    const users = await db.all("SELECT * FROM users");
-    res.json(users);
+  // READ cart items
+  app.get("/cart", async (req, res) => {
+    const cartItems = await db.all("SELECT * FROM cart");
+    res.json(cartItems);
+  });
+
+  // READ single cart item by id
+  app.get("/cart/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+      const item = await db.get("SELECT * FROM cart WHERE id = ?", [id]);
+      if (item) {
+        res.json(item);
+      } else {
+        res.status(404).json({ error: "Item not found" });
+      }
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   app.listen(PORT, () => {
