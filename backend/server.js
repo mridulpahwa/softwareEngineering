@@ -39,6 +39,22 @@ async function startServer() {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
+
+  // READ book genres
+  app.get("/book_genres", async (req, res) => {
+    const genres = await db.all("SELECT * FROM book_genres");
+    res.json(genres);
+  });
+
+  // READ books by specific genre
+  app.get("/book_genres/:genre", async (req, res) => {
+    const { genre } = req.params;
+    const books = await db.all(
+      "SELECT * FROM book_genres WHERE LOWER(genre) = LOWER(?)",
+      [genre]
+    );
+    res.json(books);
+  });
 }
 
 startServer();
