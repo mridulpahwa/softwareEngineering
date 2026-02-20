@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = 5173;
 
 async function startServer() {
   await initDB();
@@ -34,6 +34,27 @@ async function startServer() {
   app.get("/users", async (req, res) => {
     const users = await db.all("SELECT * FROM users");
     res.json(users);
+  });
+
+  // READ authors
+  app.get("/authors", async (req, res) => {
+    const authors = await db.all("SELECT * FROM Author");
+    res.json(authors);
+  });
+
+  // READ single author by id
+  app.get("/authors/:id", async (req, res) => {
+    const { id } = req.params;
+    try {
+      const author = await db.get("SELECT * FROM Author WHERE id = ?", [id]);
+      if (author) {
+        res.json(author);
+      } else {
+        res.status(404).json({ error: "Author not found" });
+      }
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   app.listen(PORT, () => {
