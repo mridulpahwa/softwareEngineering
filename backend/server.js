@@ -36,25 +36,140 @@ async function startServer() {
     res.json(users);
   });
 
-  // READ authors
-  app.get("/authors", async (req, res) => {
-    const authors = await db.all("SELECT * FROM Author");
-    res.json(authors);
+  // Book Details: Create Author (POST)
+  app.post("/authors", async (req, res) => {
+    const { first_name, last_name, biography, publisher } = req.body;
+
+    if (!first_name || !last_name || !publisher) {
+      return res.status(400).json({ error: "first_name, last_name, publisher are required" });
+    }
+
+    //Publisher exists
+    await db.run(`INSERT OR IGNORE INTO Publisher (name) VALUES (?)`, [publisher]);
+
+    //Create author
+    await db.run(
+      `INSERT INTO Author (first_name, last_name, biography, publisher_id)
+      VALUES (?, ?, ?, (SELECT id FROM Publisher WHERE name = ?))`,
+      [first_name, last_name, biography ?? null, publisher]
+    );
+
+    res.status(201).end();
   });
 
-  // READ single author by id
-  app.get("/authors/:id", async (req, res) => {
-    const { id } = req.params;
-    try {
-      const author = await db.get("SELECT * FROM Author WHERE id = ?", [id]);
-      if (author) {
-        res.json(author);
-      } else {
-        res.status(404).json({ error: "Author not found" });
-      }
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+  //Book Details: Create Book (POST)
+  app.post("/books", async (req, res) => {
+    const {
+      isbn,
+      title,
+      description,
+      price,
+      author_id,
+      genre,
+      publisher,
+      year_published,
+      copies_sold
+    } = req.body;
+
+    if (!isbn || !title || price == null || !author_id || !genre || !publisher) {
+      return res.status(400).json({
+        error: "isbn, title, price, author_id, genre, publisher are required"
+      });
     }
+
+    //Publisher and Genre exist
+    await db.run(`INSERT OR IGNORE INTO Publisher (name) VALUES (?)`, [publisher]);
+    await db.run(`INSERT OR IGNORE INTO Genre (name) VALUES (?)`, [genre]);
+
+    //Insert book
+    await db.run(
+      `INSERT INTO Book (isbn, title, description, price, year_published, copies_sold, publisher_id, genre_id)
+      VALUES (
+        ?, ?, ?, ?, ?, ?,
+        (SELECT id FROM Publisher WHERE name = ?),
+        (SELECT id FROM Genre WHERE name = ?)
+      )`,
+      [
+        isbn,
+        title,
+        description ?? null,
+        price,
+        year_published ?? null,
+        copies_sold ?? 0,
+        publisher,
+        genre
+      ]
+    );
+
+  //Link book and author
+    await db.run(
+      `INSERT OR IGNORE INTO BookAuthor (isbn, author_id) VALUES (?, ?)`,
+      [isbn, author_id]
+    );
+
+    res.status(201).end();
+  });
+
+  //Book Details: Get Book by ISBN (GET)
+  app.get("/books/:isbn", async (req, res) => {
+    const { isbn } = req.params;
+
+    const book = await db.get(
+      `SELECT
+        b.isbn,
+        b.title,
+        b.description,
+        b.price,
+        b.year_published,
+        b.copies_sold,
+        p.name AS publisher,
+        g.name AS genre
+      FROM Book b
+      LEFT JOIN Publisher p ON b.publisher_id = p.id
+      LEFT JOIN Genre g ON b.genre_id = g.id
+      WHERE b.isbn = ?`,
+      [isbn]
+    );
+
+    if (!book) return res.status(404).json({ error: "Book not found" });
+
+    const authors = await db.all(
+      `SELECT a.id, a.first_name, a.last_name, a.biography
+      FROM Author a
+      JOIN BookAuthor ba ON ba.author_id = a.id
+      WHERE ba.isbn = ?`,
+      [isbn]
+    );
+
+    book.authors = authors;
+    res.json(book);
+  });
+
+  //Book Details: Get Books by AuthorId (GET)
+  app.get("/authors/:authorId/books", async (req, res) => {
+    const authorId = Number(req.params.authorId);
+    if (Number.isNaN(authorId)) return res.status(400).json({ error: "authorId must be a number" });
+
+    const books = await db.all(
+      `SELECT
+        b.isbn,
+        b.title,
+        b.description,
+        b.price,
+        b.year_published,
+        b.copies_sold,
+        p.name AS publisher,
+        g.name AS genre
+      FROM Book b
+      JOIN BookAuthor ba ON ba.isbn = b.isbn
+      LEFT JOIN Publisher p ON b.publisher_id = p.id
+      LEFT JOIN Genre g ON b.genre_id = g.id
+      WHERE ba.author_id = ?
+      ORDER BY b.title`,
+      [authorId]
+    );
+
+    res.json(books);
   });
 
   app.listen(PORT, () => {
