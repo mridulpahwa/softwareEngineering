@@ -13,11 +13,6 @@ async function startServer() {
   await initDB();
   const db = await dbPromise;
 
-  // Test route
-  app.get("/", (req, res) => {
-    res.send("API is running");
-  });
-
   // INSERT user
   app.post("/users", async (req, res) => {
     const { name, email } = req.body;
@@ -190,6 +185,48 @@ async function startServer() {
     res.json(books);
   });
 
+  // Endpoints for wishlist 
+  app.post("/wishlists", async (req, res) => {
+  const { id, name } = req.body;
+
+  try {
+    const result = await db.run(
+      "INSERT INTO wishlist (id, name) VALUES (?, ?)",
+      [id, name]
+    );
+
+    res.json({
+            message: "Wishlist Created",
+            wishlist_id: result.lastID 
+            });
+  } catch (err) {
+    if (err.message.includes("UNIQUE")) {
+      return res.status(400).json({
+        error: "Wishlist with this name already exists for this user"
+      });
+    }
+    res.status(500).json({ error: err.message });
+  }
+  });
+
+  app.post("/wishlist-books", async (req, res) => {
+    const { wishlist_id, book_id } = req.body;
+
+    try {
+      await db.run(
+        "INSERT INTO wishlist_books (wishlist_id, book_id) VALUES (?, ?)",
+        [wishlist_id, book_id]
+      );
+
+      res.json({ message: "Book added to wishlist"
+      });
+    } catch (err) {
+      if (err.message.includes("UNIQUE")) {
+      return res.status(400).json({ error: "Book already in wishlist" });
+    }
+      res.status(500).json({ error: err.message });
+    }
+  });
 
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

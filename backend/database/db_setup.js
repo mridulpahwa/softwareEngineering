@@ -106,5 +106,23 @@ export async function initDB() {
     );
     `);
 
-    console.log("Database setup complete");
+  // Wishlist and Wishlist book Tables
+    await db.exec(`
+    CREATE TABLE IF NOT EXISTS wishlist (
+      wishlist_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      UNIQUE(id, name),
+      FOREIGN KEY (id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS wishlist_books (
+      wishlist_id INTEGER NOT NULL,
+      book_id INTEGER NOT NULL,
+      PRIMARY KEY (wishlist_id, book_id),
+      FOREIGN KEY (wishlist_id) REFERENCES wishlist(wishlist_id)
+        ON DELETE CASCADE
+    );
+  `); 
+
 }
