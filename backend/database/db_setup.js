@@ -41,6 +41,14 @@ export async function initDB() {
     );
     `);
 
+    // Migration: if the on-disk Author table was created earlier without `publisher_id`, add it.
+    // Use PRAGMA to inspect columns so this is safe to run repeatedly.
+    const authorCols = await db.all("PRAGMA table_info('Author')");
+    const hasPublisherId = authorCols.some(col => col.name === 'publisher_id');
+    if (!hasPublisherId) {
+        await db.exec(`ALTER TABLE Author ADD COLUMN publisher_id INTEGER;`);
+    }
+
     //Book
     await db.exec(`
     CREATE TABLE IF NOT EXISTS Book (
