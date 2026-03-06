@@ -3,15 +3,20 @@ import dbPromise from "./db.js";
 export async function initDB() {
     const db = await dbPromise;
 
-    // Ensure users table exists (minimal columns)
+    // Drop existing table and recreate with new schema
+    await db.exec(`DROP TABLE IF EXISTS users;`);
+    
     await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        email TEXT
+    CREATE TABLE users (
+        username TEXT NOT NULL DEFAULT ' ' PRIMARY KEY,
+        password TEXT NOT NULL DEFAULT ' ',
+        name TEXT NOT NULL DEFAULT ' ',
+        email TEXT NOT NULL DEFAULT ' ',
+        home_address TEXT NOT NULL DEFAULT ' '
     );
     `);
 
+    /*
     // Ensure expected columns exist; add any missing columns safely
     const existing = await db.all(`PRAGMA table_info(users);`);
     const cols = existing.map(c => c.name);
@@ -28,6 +33,7 @@ export async function initDB() {
     // Make sure name and email exist (in case of very old schema)
     await ensureColumn('name', "TEXT NOT NULL DEFAULT ''");
     await ensureColumn('email', "TEXT NOT NULL DEFAULT ''");
+    */
 
     // Insert dummy data only if table is empty
     const row = await db.get(`SELECT COUNT(*) AS count FROM users;`);

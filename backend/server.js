@@ -36,10 +36,10 @@ async function startServer() {
     res.json(users);
   });
 
-  // READ single user by id
-  app.get("/users/:id", async (req, res) => {
-    const { id } = req.params;
-    const user = await db.get("SELECT * FROM users WHERE id = ?", [id]);
+  // READ single user by username
+  app.get("/users/:username", async (req, res) => {
+    const { username } = req.params;
+    const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   });
