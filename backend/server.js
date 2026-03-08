@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dbPromise from "./database/db.js";
 import { initDB } from "./database/db_setup.js";
+import { getTop10Books } from "./database/db_setup.js";
 
 const app = express();
 app.use(cors());
@@ -55,6 +56,12 @@ async function startServer() {
     );
     res.json(books);
   });
+
+  app.get("/getTop10Books", async (req, res) => {
+  const topBooks = await getTop10Books();
+  res.json(topBooks);
+});
+
 }
 
 startServer();
