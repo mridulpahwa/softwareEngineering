@@ -3,6 +3,7 @@ import dbPromise from "./db.js";
 export async function initDB() {
     const db = await dbPromise;
 
+    //Shopping Cart
     await db.exec(`
     CREATE TABLE IF NOT EXISTS cart (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
