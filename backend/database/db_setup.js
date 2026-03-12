@@ -6,6 +6,7 @@ export async function initDB() {
     // Drop existing table and recreate with new schema
     await db.exec(`DROP TABLE IF EXISTS users;`);
     
+    // Create the users table with the new schema
     await db.exec(`
     CREATE TABLE users (
         username TEXT NOT NULL DEFAULT ' ' PRIMARY KEY,
@@ -15,25 +16,6 @@ export async function initDB() {
         home_address TEXT NOT NULL DEFAULT ' '
     );
     `);
-
-    /*
-    // Ensure expected columns exist; add any missing columns safely
-    const existing = await db.all(`PRAGMA table_info(users);`);
-    const cols = existing.map(c => c.name);
-
-    const ensureColumn = async (name, definition) => {
-        if (!cols.includes(name)) {
-            await db.exec(`ALTER TABLE users ADD COLUMN ${name} ${definition};`);
-        }
-    };
-
-    await ensureColumn('username', "TEXT NOT NULL DEFAULT ''");
-    await ensureColumn('password', "TEXT NOT NULL DEFAULT ''");
-    await ensureColumn('home_address', "TEXT NOT NULL DEFAULT ''");
-    // Make sure name and email exist (in case of very old schema)
-    await ensureColumn('name', "TEXT NOT NULL DEFAULT ''");
-    await ensureColumn('email', "TEXT NOT NULL DEFAULT ''");
-    */
 
     // Insert dummy data only if table is empty
     const row = await db.get(`SELECT COUNT(*) AS count FROM users;`);
