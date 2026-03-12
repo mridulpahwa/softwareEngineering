@@ -125,4 +125,15 @@ export async function initDB() {
     );
   `); 
 
+  //Shopping Cart
+    await db.exec(`
+    CREATE TABLE IF NOT EXISTS cart (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        bookname TEXT NOT NULL,
+        bookdetails TEXT NOT NULL,
+        price REAL NOT NULL,
+        userdetails TEXT NOT NULL
+    );
+    `);
+
 }
