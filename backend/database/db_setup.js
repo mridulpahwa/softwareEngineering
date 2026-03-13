@@ -11,5 +11,16 @@ export async function initDB() {
     );
     `);
 
+    await db.exec(`
+
+    CREATE TABLE IF NOT EXISTS ratings (
+        bookId INTEGER NOT NULL,
+        userId INTEGER NOT NULL,
+        comment TEXT NOT NULL,
+        starScore INTEGER NOT NULL,
+        date TEXT NOT NULL
+        );
+    `);
+    
     console.log("Database setup complete");
 }
