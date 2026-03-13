@@ -62,9 +62,8 @@ async function startServer() {
     res.json(ratings);
   })
 
-  
   //GET average rating
-  app.get("/ratings/getAverage/:id", async (req, res) => {
+  app.get("/ratings/score-average/:id", async (req, res) => {
 
     const book = req.params.id;
 
@@ -74,7 +73,7 @@ async function startServer() {
   })
 
   //GET comments
-  app.get("/ratings/getComments/:id", async (req, res) => {
+  app.get("/ratings/comments/:id", async (req, res) => {
 
     const book = req.params.id;
 
