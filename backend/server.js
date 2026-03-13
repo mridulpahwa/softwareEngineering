@@ -31,6 +31,14 @@ async function startServer() {
     res.json(users);
   });
 
+  // READ single user by username
+  app.get("/users/:username", async (req, res) => {
+    const { username } = req.params;
+    const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
+  });
+
   // Book Details: Create Author (POST)
   app.post("/authors", async (req, res) => {
     const { first_name, last_name, biography, publisher } = req.body;
