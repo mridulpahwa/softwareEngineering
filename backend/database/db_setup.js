@@ -3,14 +3,6 @@ import dbPromise from "./db.js";
 export async function initDB() {
     const db = await dbPromise;
 
-    await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL
-    );
-    `);
-
     //Book Details:
 
     //Publisher
@@ -135,5 +127,15 @@ export async function initDB() {
         userdetails TEXT NOT NULL
     );
     `);
-
+    
+    // User Table
+    await db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+        username TEXT NOT NULL DEFAULT ' ' PRIMARY KEY,
+        password TEXT NOT NULL DEFAULT ' ',
+        name TEXT NOT NULL DEFAULT ' ',
+        email TEXT NOT NULL DEFAULT ' ',
+        home_address TEXT NOT NULL DEFAULT ' '
+    );
+    `);
 }
