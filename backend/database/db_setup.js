@@ -18,21 +18,31 @@ export async function initDB() {
         name TEXT NOT NULL,
         author TEXT NOT NULL,
         genre TEXT NOT NULL,
+        publisher TEXT NOT NULL,
+        price REAL NOT NULL,
+        rating INTEGER NOT NULL,
         sales INTEGER DEFAULT 0
     );
     `);
 
     // Dummy data for book genres
     await db.exec(`
-    INSERT INTO book_genres (name, author, genre, sales) VALUES
-    ('The Great Gatsby', 'F. Scott Fitzgerald', 'Classic', 5000),
-    ('To Kill a Mockingbird', 'Harper Lee', 'Classic', 8500),
-    ('1984', 'George Orwell', 'Dystopian', 7200),
-    ('The Catcher in the Rye', 'J.D. Salinger', 'Classic', 4300),
-    ('Brave New World', 'Aldous Huxley', 'Dystopian', 6100),
-    ('The Hobbit', 'J.R.R. Tolkien', 'Fantasy', 9200),
-    ('Harry Potter and the Sorcerer''s Stone', 'J.K. Rowling', 'Fantasy', 12500),
-    ('The Name of the Wind', 'Patrick Rothfuss', 'Fantasy', 3800);
+    INSERT INTO book_genres (name, author, genre, publisher, price, rating, sales) VALUES
+    ('The Great Gatsby', 'F. Scott Fitzgerald', 'Classic', 'Scribner', 9.99, 8, 5000),
+    ('To Kill a Mockingbird', 'Harper Lee', 'Classic', 'J.B. Lippincott', 11.99, 9, 8500),
+    ('1984', 'George Orwell', 'Dystopian', 'Secker & Warburg', 10.99, 8, 7200),
+    ('The Catcher in the Rye', 'J.D. Salinger', 'Classic', 'Little, Brown', 10.49, 6, 4300),
+    ('Brave New World', 'Aldous Huxley', 'Dystopian', 'Chatto & Windus', 11.49, 2, 6100),
+    ('The Hobbit', 'J.R.R. Tolkien', 'Fantasy', 'Allen & Unwin', 12.99, 9, 9200),
+    ('Harry Potter and the Sorcerer''s Stone', 'J.K. Rowling', 'Fantasy', 'Bloomsbury', 13.99, 7, 12500),
+    ('The Name of the Wind', 'Patrick Rothfuss', 'Fantasy', 'DAW Books', 14.99, 9, 3800),
+    ('Demon Slayer', 'Koyoharu Gotouge', 'Manga', 'Shueisha', 12.49, 8, 15300),
+    ('One Piece', 'Eiichiro Oda', 'Manga', 'Weekly Shonen Jump', 13.49, 9, 18700),
+    ('Dune', 'Frank Herbert', 'Science Fiction', 'Ace Books', 13.99, 8, 11200),
+    ('The Lord of the Rings', 'J.R.R. Tolkien', 'Fantasy', 'Houghton Mifflin', 14.99, 10, 14600),
+    ('Sapiens', 'Yuval Noah Harari', 'Non-Fiction', 'Harvill Secker', 12.99, 3, 9850),
+    ('The Silent Patient', 'Alex Michaelides', 'Thriller', 'Celadon Books', 11.49, 5, 6750),
+    ('Educated', 'Tara Westover', 'Memoir', 'Random House', 12.99, 4, 8200);
     `);
     console.log("Database setup complete");
 }

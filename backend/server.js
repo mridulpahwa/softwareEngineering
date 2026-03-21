@@ -62,6 +62,23 @@ async function startServer() {
   res.json(topBooks);
 });
 
+  // READ books by rating or higher
+  app.get("/books/rating", async (req, res) => {
+    const { rating } = req.query;
+
+    // Validate rating parameter
+    if (!rating || isNaN(rating)) {
+      return res.status(400).json({ error: "Rating parameter is required and must be a number" });
+    }
+
+    const ratingValue = parseInt(rating);
+    const books = await db.all(
+      "SELECT * FROM book_genres WHERE rating >= ? ORDER BY rating ASC",
+      [ratingValue]
+    );
+    res.json(books);
+  });
+
 }
 
 startServer();
