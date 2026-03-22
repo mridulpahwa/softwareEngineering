@@ -236,6 +236,27 @@ async function startServer() {
     }
   });
 
+  app.post("/moveBookFromWishlist", async(req, res) =>{
+    const {wishlist_id, book_id} = req.body;
+    try{
+    const delete_book_from_wishlist = await db.run(
+      "DELETE FROM wishlist_books WHERE wishlist_id = ? AND book_id = ?",
+      [wishlist_id, book_id]
+    )
+    const add_book_to_cart = await db.run(
+      "INSERT INTO cart (book_id, bookname, bookdetails, price, userdetails) VALUES (?, ?, ?, ?, ?)",
+      [book_id, "bookname", "bookdetails", "price", "userdetails"]
+    );
+
+    res.json({ message: "Book added to Shopping Cart"
+    });
+    } catch(err) {
+      console.log(err.message)
+      return res.status(400).json({ error: "Operation Failed" });
+    }
+  }
+);
+
   // INSERT cart
   app.post("/cart", async (req, res) => {
     const { bookname, bookdetails, price, userdetails } = req.body;

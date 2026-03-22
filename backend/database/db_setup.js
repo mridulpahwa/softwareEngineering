@@ -121,6 +121,7 @@ export async function initDB() {
     await db.exec(`
     CREATE TABLE IF NOT EXISTS cart (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        book_id INTEGER NOT NULL,
         bookname TEXT NOT NULL,
         bookdetails TEXT NOT NULL,
         price REAL NOT NULL,
