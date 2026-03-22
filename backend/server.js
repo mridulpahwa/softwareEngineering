@@ -15,11 +15,11 @@ async function startServer() {
 
   // INSERT user
   app.post("/users", async (req, res) => {
-    const { name, email } = req.body;
+    const { username, password, name, email, home_address } = req.body;
 
     const result = await db.run(
-      "INSERT INTO users (name, email) VALUES (?, ?)",
-      [name, email]
+      "INSERT INTO users (username, password, name, email, home_address) VALUES (?, ?, ?, ?, ?)",
+      [username, password, name, email, home_address]
     );
 
     res.json({ id: result.lastID });
@@ -37,6 +37,19 @@ async function startServer() {
     const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
+  });
+
+  // PATCH any user info by username, except email
+  app.patch("/users/:username", async (req, res) => {
+    const { username } = req.params;
+    const { username: newUsername, password, name, home_address } = req.body;
+    const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    await db.run(
+      "UPDATE users SET username = ?, password = ?, name = ?, home_address = ? WHERE username = ?",
+      [newUsername ?? user.username, password ?? user.password, name ?? user.name, home_address ?? user.home_address, username]
+    );
+    res.json({ message: "User updated successfully" });
   });
 
   // Book Details: Create Author (POST)
