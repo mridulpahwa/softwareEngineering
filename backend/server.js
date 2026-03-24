@@ -210,7 +210,7 @@ async function startServer() {
   } catch (err) {
     if (err.message.includes("UNIQUE")) {
       return res.status(400).json({
-        error: "Wishlist with this name already exists for this user"
+        error: "Wishlist with this name already exists. Please try a different name!"
       });
     }
     res.status(500).json({ error: err.message });
@@ -230,7 +230,7 @@ async function startServer() {
       });
     } catch (err) {
       if (err.message.includes("UNIQUE")) {
-      return res.status(400).json({ error: "Book already in wishlist" });
+      return res.status(400).json({ error: "Book already in wishlist. Cannot add it again!" });
     }
       res.status(500).json({ error: err.message });
     }
@@ -247,12 +247,11 @@ async function startServer() {
       "INSERT INTO cart (book_id, bookname, bookdetails, price, userdetails) VALUES (?, ?, ?, ?, ?)",
       [book_id, "bookname", "bookdetails", "price", "userdetails"]
     );
-
     res.json({ message: "Book added to Shopping Cart"
     });
     } catch(err) {
       console.log(err.message)
-      return res.status(400).json({ error: "Operation Failed" });
+      return res.status(400).json({ error: "Operation Failed. Please try again!" });
     }
   }
 );
