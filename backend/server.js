@@ -67,7 +67,7 @@ async function startServer() {
 
     const book = req.params.id;
 
-    const average = await db.all("SELECT AVG(starScore) FROM ratings WHERE bookId = ?", [book])
+    const average = await db.all("SELECT AVG(starScore) as averageStarScore FROM ratings WHERE bookId = ?", [book])
 
     res.send(average);
   })
