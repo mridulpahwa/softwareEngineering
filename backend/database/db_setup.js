@@ -11,7 +11,7 @@ export async function initDB() {
     );
     `);
 
-    // Book Genre Table
+    // Creates the book_genres table if it doesn't exist
     await db.exec(`
     CREATE TABLE IF NOT EXISTS book_genres (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,7 +25,7 @@ export async function initDB() {
     );
     `);
 
-    // Dummy data for book genres
+    // Books
     await db.exec(`
     INSERT INTO book_genres (name, author, genre, publisher, price, rating, sales) VALUES
     ('The Great Gatsby', 'F. Scott Fitzgerald', 'Classic', 'Scribner', 9.99, 8, 5000),
@@ -47,6 +47,8 @@ export async function initDB() {
     console.log("Database setup complete");
 }
 
+// gets the top 10 books based on sales
+
 export async function getTop10Books() {
     const db = await dbPromise;
     const topBooks = await db.all(`
@@ -56,4 +58,27 @@ export async function getTop10Books() {
         LIMIT 10
     `);
     return topBooks;
+}
+
+// Updates book prices by discount percent for all publishers or a specific publisher.
+export async function updateBookPricesByDiscount(discountPercent, publisher) {
+    const db = await dbPromise;
+
+    const discountFactor = 1 - discountPercent / 100;
+
+    if (publisher) {
+        await db.run(
+            `UPDATE book_genres
+             SET price = ROUND(price * ?, 2)
+             WHERE LOWER(publisher) = LOWER(?)`,
+            [discountFactor, publisher]
+        );
+        return;
+    }
+
+    await db.run(
+        `UPDATE book_genres
+         SET price = ROUND(price * ?, 2)`,
+        [discountFactor]
+    );
 }
