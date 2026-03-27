@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dbPromise from "./database/db.js";
-import { initDB } from "./database/db_setup.js";
+import { initDB, getTop10Books, updateBookPricesByDiscount } from "./database/db_setup.js";
 
 const app = express();
 app.use(cors());
