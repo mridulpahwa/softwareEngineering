@@ -321,6 +321,113 @@ async function startServer() {
     }
   });
 
+  //INSERT rating
+  app.post("/ratings", async (req, res) => {
+
+    const {bookId, userId, comment, starScore} = req.body;
+
+    //Gets current date
+    const currentDate = new Date()
+
+    const date = JSON.stringify(new String((currentDate.getMonth() + 1) + "/" + (currentDate.getDate()) + "/" + (currentDate.getFullYear())));
+
+    const rating = await db.run(
+
+      "INSERT INTO ratings (bookId, userId, comment, starScore, date) VALUES (?, ?, ?, ?, ?)",
+      [bookId, userId, comment, starScore, date]
+    );
+
+    res.json({bookId: rating.lastID});
+  })
+
+  //READ ratings
+  app.get("/ratings", async (req, res) => {
+
+    const ratings = await db.all("SELECT * FROM ratings");
+    res.json(ratings);
+  })
+
+  //GET average rating
+  app.get("/ratings/score-average/:id", async (req, res) => {
+
+    const book = req.params.id;
+
+    const average = await db.all("SELECT AVG(starScore) as averageStarScore FROM ratings WHERE bookId = ?", [book])
+
+    res.send(average);
+  })
+
+  //GET comments
+  app.get("/ratings/comments/:id", async (req, res) => {
+
+    const book = req.params.id;
+
+    const comments = await db.all("SELECT comment FROM ratings WHERE bookId = ?", [book])
+
+    res.json(comments);
+  })
+  
+   // READ book genres
+  app.get("/book_genres", async (req, res) => {
+    const genres = await db.all("SELECT * FROM book_genres");
+    res.json(genres);
+  });
+
+  // READ books by specific genre
+  app.get("/book_genres/:genre", async (req, res) => {
+    const { genre } = req.params;
+    const books = await db.all(
+      "SELECT * FROM book_genres WHERE LOWER(genre) = LOWER(?)",
+      [genre]
+    );
+    res.json(books);
+  });
+
+  // READ top 10 books by sales
+  app.get("/getTop10Books", async (req, res) => {
+  const topBooks = await getTop10Books();
+  res.json(topBooks);
+});
+
+  // READ books by rating or higher
+  app.get("/books/rating", async (req, res) => {
+    const { rating } = req.query;
+
+    // Validate rating parameter
+    if (!rating || isNaN(rating)) {
+      return res.status(400).json({ error: "Rating parameter is required and must be a number" });
+    }
+
+    const ratingValue = parseInt(rating);
+    const books = await db.all(
+      "SELECT * FROM book_genres WHERE rating >= ? ORDER BY rating ASC",
+      [ratingValue]
+    );
+    res.json(books);
+  });
+
+  // UPDATE book prices by discount, optionally by publisher
+  const applyDiscountHandler = async (req, res) => {
+    const discountRaw = req.query.discountPercent ?? req.body.discountPercent;
+    const publisher = req.query.publisher ?? req.body.publisher;
+
+    if (discountRaw === undefined) {
+      return res.status(400).json({ error: "discountPercent is required" });
+    }
+
+    const discountPercent = Number(discountRaw);
+
+    if (Number.isNaN(discountPercent) || discountPercent < 10 || discountPercent > 20) {
+      return res.status(400).json({ error: "discountPercent must be a number between 10 and 20" });
+    }
+
+    await updateBookPricesByDiscount(discountPercent, publisher);
+    return res.status(204).send();
+  };
+
+  app.patch("/books/prices/discount", applyDiscountHandler);
+  app.put("/books/prices/discount", applyDiscountHandler);
+
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
