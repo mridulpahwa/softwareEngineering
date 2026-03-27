@@ -3,11 +3,35 @@ import dbPromise from "./db.js";
 export async function initDB() {
     const db = await dbPromise;
 
+    //Book Details:
+
+    //Publisher
     await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS Publisher (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL
+        name TEXT NOT NULL UNIQUE
+    );
+    `);
+
+
+    //Genre
+    await db.exec(`
+    CREATE TABLE IF NOT EXISTS Genre (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE
+    );
+    `);
+
+
+    //Author
+    await db.exec(`
+    CREATE TABLE IF NOT EXISTS Author (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        biography TEXT,
+        publisher_id INTEGER,
+        UNIQUE(first_name, last_name, publisher_id)
     );
     `);
 
