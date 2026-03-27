@@ -139,4 +139,16 @@ export async function initDB() {
         home_address TEXT NOT NULL DEFAULT ' '
     );
     `);
+    
+    //Ratings table
+    await db.exec(`
+
+    CREATE TABLE IF NOT EXISTS ratings (
+        bookId INTEGER NOT NULL,
+        userId INTEGER NOT NULL,
+        comment TEXT NOT NULL,
+        starScore INTEGER NOT NULL,
+        date TEXT NOT NULL
+        );
+    `);
 }
