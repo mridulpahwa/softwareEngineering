@@ -1,4 +1,5 @@
 import dbPromise from "./db.js";
+import { bookGenresSeedData } from "./book_genres_seed_data.js";
 
 export async function initDB() {
     const db = await dbPromise;
@@ -139,7 +140,7 @@ export async function initDB() {
         home_address TEXT NOT NULL DEFAULT ' '
     );
     `);
-    
+
     //Ratings table
     await db.exec(`
 
@@ -151,4 +152,89 @@ export async function initDB() {
         date TEXT NOT NULL
         );
     `);
+    
+     // Creates the book_genres table if it doesn't exist
+    await db.exec(`
+    CREATE TABLE IF NOT EXISTS book_genres (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        author TEXT NOT NULL,
+        genre TEXT NOT NULL,
+        publisher TEXT NOT NULL,
+        price REAL NOT NULL,
+        rating INTEGER NOT NULL,
+        sales INTEGER DEFAULT 0
+    );
+    `);
+
+    const existingBookGenres = await db.get(
+        `SELECT COUNT(*) AS count FROM book_genres`
+    );
+
+    // Seed only once to avoid duplicate rows across repeated server restarts.
+    if ((existingBookGenres?.count ?? 0) === 0) {
+        await db.exec("BEGIN TRANSACTION");
+        try {
+            const insertSeedBook = await db.prepare(`
+                INSERT INTO book_genres (name, author, genre, publisher, price, rating, sales)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `);
+
+            for (const book of bookGenresSeedData) {
+                await insertSeedBook.run(
+                    book.name,
+                    book.author,
+                    book.genre,
+                    book.publisher,
+                    book.price,
+                    book.rating,
+                    book.sales ?? 0
+                );
+            }
+
+            await insertSeedBook.finalize();
+            await db.exec("COMMIT");
+        } catch (error) {
+            await db.exec("ROLLBACK");
+            throw error;
+        }
+    }
+
+    console.log("Database setup complete");
+}
+
+// gets the top 10 books based on sales
+
+export async function getTop10Books() {
+    const db = await dbPromise;
+    const topBooks = await db.all(`
+        SELECT name, author, genre, sales 
+        FROM book_genres 
+        ORDER BY sales DESC 
+        LIMIT 10
+    `);
+    return topBooks;
+}
+
+// Updates book prices by discount percent for all publishers or a specific publisher.
+export async function updateBookPricesByDiscount(discountPercent, publisher) {
+    const db = await dbPromise;
+
+    const discountFactor = 1 - discountPercent / 100;
+
+    if (publisher) {
+        await db.run(
+            `UPDATE book_genres
+             SET price = ROUND(price * ?, 2)
+             WHERE LOWER(publisher) = LOWER(?)`,
+            [discountFactor, publisher]
+        );
+        return;
+    }
+
+    await db.run(
+        `UPDATE book_genres
+         SET price = ROUND(price * ?, 2)`,
+        [discountFactor]
+    );
 }
