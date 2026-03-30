@@ -1,4 +1,5 @@
 import dbPromise from "./db.js";
+import { bookGenresSeedData } from "./book_genres_seed_data.js";
 
 export async function initDB() {
     const db = await dbPromise;
@@ -166,25 +167,39 @@ export async function initDB() {
     );
     `);
 
-    // Books
-    await db.exec(`
-    INSERT INTO book_genres (name, author, genre, publisher, price, rating, sales) VALUES
-    ('The Great Gatsby', 'F. Scott Fitzgerald', 'Classic', 'Scribner', 9.99, 8, 5000),
-    ('To Kill a Mockingbird', 'Harper Lee', 'Classic', 'J.B. Lippincott', 11.99, 9, 8500),
-    ('1984', 'George Orwell', 'Dystopian', 'Secker & Warburg', 10.99, 8, 7200),
-    ('The Catcher in the Rye', 'J.D. Salinger', 'Classic', 'Little, Brown', 10.49, 6, 4300),
-    ('Brave New World', 'Aldous Huxley', 'Dystopian', 'Chatto & Windus', 11.49, 2, 6100),
-    ('The Hobbit', 'J.R.R. Tolkien', 'Fantasy', 'Allen & Unwin', 12.99, 9, 9200),
-    ('Harry Potter and the Sorcerer''s Stone', 'J.K. Rowling', 'Fantasy', 'Bloomsbury', 13.99, 7, 12500),
-    ('The Name of the Wind', 'Patrick Rothfuss', 'Fantasy', 'DAW Books', 14.99, 9, 3800),
-    ('Demon Slayer', 'Koyoharu Gotouge', 'Manga', 'Shueisha', 12.49, 8, 15300),
-    ('One Piece', 'Eiichiro Oda', 'Manga', 'Weekly Shonen Jump', 13.49, 9, 18700),
-    ('Dune', 'Frank Herbert', 'Science Fiction', 'Ace Books', 13.99, 8, 11200),
-    ('The Lord of the Rings', 'J.R.R. Tolkien', 'Fantasy', 'Houghton Mifflin', 14.99, 10, 14600),
-    ('Sapiens', 'Yuval Noah Harari', 'Non-Fiction', 'Harvill Secker', 12.99, 3, 9850),
-    ('The Silent Patient', 'Alex Michaelides', 'Thriller', 'Celadon Books', 11.49, 5, 6750),
-    ('Educated', 'Tara Westover', 'Memoir', 'Random House', 12.99, 4, 8200);
-    `);
+    const existingBookGenres = await db.get(
+        `SELECT COUNT(*) AS count FROM book_genres`
+    );
+
+    // Seed only once to avoid duplicate rows across repeated server restarts.
+    if ((existingBookGenres?.count ?? 0) === 0) {
+        await db.exec("BEGIN TRANSACTION");
+        try {
+            const insertSeedBook = await db.prepare(`
+                INSERT INTO book_genres (name, author, genre, publisher, price, rating, sales)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `);
+
+            for (const book of bookGenresSeedData) {
+                await insertSeedBook.run(
+                    book.name,
+                    book.author,
+                    book.genre,
+                    book.publisher,
+                    book.price,
+                    book.rating,
+                    book.sales ?? 0
+                );
+            }
+
+            await insertSeedBook.finalize();
+            await db.exec("COMMIT");
+        } catch (error) {
+            await db.exec("ROLLBACK");
+            throw error;
+        }
+    }
+
     console.log("Database setup complete");
 }
 
