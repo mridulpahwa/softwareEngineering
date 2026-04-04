@@ -194,19 +194,35 @@ async function startServer() {
   });
 
   // Endpoints for wishlist 
+
+  // Create a wishlist
   app.post("/wishlists", async (req, res) => {
   const { id, name } = req.body;
 
   try {
+    const read_count = await db.get(
+      "SELECT COUNT(*) as count FROM wishlist WHERE id = ?", 
+      [id]
+    );
+
+    const number_of_wishlist = read_count.count;
+    if (number_of_wishlist < 3){
     const result = await db.run(
       "INSERT INTO wishlist (id, name) VALUES (?, ?)",
       [id, name]
     );
-
     res.json({
             message: "Wishlist Created",
             wishlist_id: result.lastID 
             });
+    } 
+    else{
+      return res.status(400).json({
+        error: "User already has 3 wishlists"
+      });
+    }
+
+    
   } catch (err) {
     if (err.message.includes("UNIQUE")) {
       return res.status(400).json({
@@ -216,8 +232,9 @@ async function startServer() {
     res.status(500).json({ error: err.message });
   }
   });
-
-  app.post("/wishlist-books", async (req, res) => {
+  
+  // Add book to wishlist
+  app.post("/wishlistBooks", async (req, res) => {
     const { wishlist_id, book_id } = req.body;
 
     try {
@@ -236,6 +253,7 @@ async function startServer() {
     }
   });
 
+  //Move book to shopping cart
   app.post("/moveBookFromWishlist", async(req, res) =>{
     const {wishlist_id, book_id} = req.body;
     try{
@@ -256,6 +274,23 @@ async function startServer() {
     }
   }
 );
+
+  // Display all books in a particular wishlist
+  app.get("/showBooks/:wishlist_id", async (req, res) => {
+    const {wishlist_id} = req.params;
+
+    try {
+      const books = await db.all(
+        "SELECT * FROM wishlist_books WHERE wishlist_id = ?",
+        [wishlist_id]
+      );
+      res.json(books);
+
+    } catch (err) {
+
+      res.status(500).json({ error: err.message });
+    }
+  });
 
   // INSERT cart
   app.post("/cart", async (req, res) => {
