@@ -21,8 +21,7 @@ async function startServer() {
       "INSERT INTO users (username, password, name, email, home_address) VALUES (?, ?, ?, ?, ?)",
       [username, password, name, email, home_address]
     );
-
-    res.json({ id: result.lastID });
+    res.json();
   });
 
   // READ users
@@ -49,7 +48,38 @@ async function startServer() {
       "UPDATE users SET username = ?, password = ?, name = ?, home_address = ? WHERE username = ?",
       [newUsername ?? user.username, password ?? user.password, name ?? user.name, home_address ?? user.home_address, username]
     );
-    res.json({ message: "User updated successfully" });
+    res.json();
+  });
+
+  // INSERT credit card info for a user only if user exists
+  app.post("/credit-cards", async (req, res) => {
+    const { username, cardholder_name, card_number, expiry_date, cvv} = req.body;
+
+    // Check if user exists
+    const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const result = await db.run(
+      "INSERT INTO credit_cards (username, cardholder_name, card_number, expiry_date, cvv) VALUES (?, ?, ?, ?, ?)",
+      [username, cardholder_name, card_number, expiry_date, cvv]
+    );
+    res.json();
+  });
+
+  //DELETE user by username
+  app.delete("/users/:username", async (req, res) => {
+    const { username } = req.params;
+    const result = await db.run("DELETE FROM users WHERE username = ?", [username]);
+    res.json({ message: "User deleted successfully" });
+  });
+  
+  //DELETE credit card info by username
+  app.delete("/credit-cards/:username", async (req, res) => {
+    const { username } = req.params;
+    const result = await db.run("DELETE FROM credit_cards WHERE username = ?", [username]);
+    res.json({ message: "Credit card info deleted successfully" });
   });
 
   // Book Details: Create Author (POST)

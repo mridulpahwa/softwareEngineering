@@ -139,4 +139,16 @@ export async function initDB() {
         home_address TEXT NOT NULL DEFAULT ' '
     );
     `);
+
+    // Recreate Credit Card Table
+    await db.exec(`
+    CREATE TABLE IF NOT EXISTS credit_cards (
+        username TEXT NOT NULL DEFAULT ' ' PRIMARY KEY,
+        cardholder_name TEXT NOT NULL DEFAULT ' ',
+        card_number INTEGER NOT NULL DEFAULT 0,
+        expiry_date DATE NOT NULL DEFAULT ' ',
+        cvv INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (username) REFERENCES users(username)
+    );
+    `);
 }
